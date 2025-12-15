@@ -1,0 +1,686 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="Definitions_1_Adjusted_SLA_Layout" targetNamespace="http://bpmn.io/schema/bpmn" exporter="bpmn-js (https://demo.bpmn.io)" exporterVersion="18.6.1">
+  <bpmn:message id="Message_FormularioOnline" name="Formulário Online" />
+  <bpmn:message id="Message_EmailDocumentos" name="E-mail com Documentos" />
+  <bpmn:message id="Message_EmailPendencia" name="E-mail de Pendência" />
+  <bpmn:message id="Message_EmailDocsFaltantes" name="E-mail com Documentos Faltantes" />
+  <bpmn:message id="Message_EmailExclusaoPrazo" name="E-mail de Exclusão (Prazo)" />
+  <bpmn:message id="Message_DocsVerificacao" name="Documentação para Verificação" />
+  <bpmn:message id="Message_ParecerReferencias" name="Parecer de Referências" />
+  <bpmn:message id="Message_SolicitacaoValidacao" name="Solicitação de Validação" />
+  <bpmn:message id="Message_ResultadoValidacao" name="Resultado da Validação" />
+  <bpmn:message id="Message_EmailExclusaoValidacao" name="E-mail de Exclusão (Validação)" />
+  <bpmn:message id="Message_NotificacaoResultado" name="Notificação de Resultado" />
+  <bpmn:message id="Message_EmailOferta" name="E-mail de Oferta de Emprego" />
+  <bpmn:collaboration id="Collaboration_ProcessoSeletivo">
+    <bpmn:participant id="Participant_Candidato" name="Candidato" />
+    <bpmn:participant id="Participant_ABC" name="Processo Seletivo da Empresa ABC LTDA" processRef="Process_ABC" />
+    <bpmn:participant id="Participant_Terceirizada" name="Empresa Terceirizada" />
+    <bpmn:participant id="Participant_Avaliadores" name="Profissionais Avaliadores" />
+    <bpmn:messageFlow id="Flow_Msg_Formulario" sourceRef="Participant_Candidato" targetRef="StartEvent_FormularioRecebido" messageRef="Message_FormularioOnline" />
+    <bpmn:messageFlow id="Flow_Msg_EmailDocs" sourceRef="Participant_Candidato" targetRef="Task_ReceberDocumentosEmail" messageRef="Message_EmailDocumentos" />
+    <bpmn:messageFlow id="Flow_Msg_Pendencia" sourceRef="Task_NotificarPendencia" targetRef="Participant_Candidato" messageRef="Message_EmailPendencia" />
+    <bpmn:messageFlow id="Flow_Msg_DocsFaltantes" sourceRef="Participant_Candidato" targetRef="Event_DocsFaltantesRecebidos" messageRef="Message_EmailDocsFaltantes" />
+    <bpmn:messageFlow id="Flow_Msg_ExclusaoPrazo" sourceRef="Task_NotificarExclusaoPrazo" targetRef="Participant_Candidato" messageRef="Message_EmailExclusaoPrazo" />
+    <bpmn:messageFlow id="Flow_Msg_ParaTerceirizada" sourceRef="Task_EncaminharParaTerceirizada" targetRef="Participant_Terceirizada" messageRef="Message_DocsVerificacao" />
+    <bpmn:messageFlow id="Flow_Msg_DaTerceirizada" sourceRef="Participant_Terceirizada" targetRef="Task_ReceberParecerTerceirizada" messageRef="Message_ParecerReferencias" />
+    <bpmn:messageFlow id="Flow_Msg_ParaAvaliadores" sourceRef="Task_SolicitarValidacaoTestes" targetRef="Participant_Avaliadores" messageRef="Message_SolicitacaoValidacao" />
+    <bpmn:messageFlow id="Flow_Msg_DosAvaliadores" sourceRef="Participant_Avaliadores" targetRef="Task_ReceberValidacaoTestes" messageRef="Message_ResultadoValidacao" />
+    <bpmn:messageFlow id="Flow_Msg_ExclusaoValidacao" sourceRef="Task_NotificarExclusaoValidacao" targetRef="Participant_Candidato" messageRef="Message_EmailExclusaoValidacao" />
+    <bpmn:messageFlow id="Flow_Msg_NotificacaoAuto" sourceRef="Task_NotificarCandidatosAuto" targetRef="Participant_Candidato" messageRef="Message_NotificacaoResultado" />
+    <bpmn:messageFlow id="Flow_Msg_Oferta" sourceRef="Task_EnviarEmailOferta" targetRef="Participant_Candidato" messageRef="Message_EmailOferta" />
+  </bpmn:collaboration>
+  <bpmn:process id="Process_ABC" isExecutable="false">
+    <bpmn:laneSet id="LaneSet_ABC">
+      <bpmn:lane id="Lane_Comissao" name="Comissão de Seleção">
+        <bpmn:flowNodeRef>Task_AvaliarCandidaturas</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_NotificarRHResultados</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_RH" name="Recursos Humanos (RH)">
+        <bpmn:flowNodeRef>Task_ReceberDocumentosEmail</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_VerificarDocumentacao</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_DocsCompletos</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_NotificarPendencia</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_AguardaResposta</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Event_Timer48h</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>EndEvent_ExcluidoPrazo</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Event_DocsFaltantesRecebidos</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_EncaminharParaTerceirizada</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ReceberParecerTerceirizada</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ReceberValidacaoTestes</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_NotificarExclusaoValidacao</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>EndEvent_ExcluidoValidacao</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_CadastrarResultados</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>EndEvent_Reprovado</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_NotificarExclusaoPrazo</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_EscalarAtrasoTerceirizada</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>EndEvent_AtrasoEscalado</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_ReferenciasValidas</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_TestesValidos</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_EncaminharParaComissao</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_SolicitarValidacaoTestes</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>EventSubProcess_SLA7d</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Event_Timer3d</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_Sistema" name="Sistema de Informação">
+        <bpmn:flowNodeRef>Task_NotificarCandidatosAuto</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_EnviarEmailOferta</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>StartEvent_FormularioRecebido</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_RegistrarInformacoes</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_GerarPDF</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_Aprovado</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>EndEvent_Aprovado</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:receiveTask id="Task_ReceberDocumentosEmail" name="Receber E-mail com Documentos" messageRef="Message_EmailDocumentos">
+      <bpmn:incoming>Flow_03</bpmn:incoming>
+      <bpmn:outgoing>Flow_04</bpmn:outgoing>
+    </bpmn:receiveTask>
+    <bpmn:userTask id="Task_VerificarDocumentacao" name="Verificar Documentação Submetida">
+      <bpmn:incoming>Flow_04</bpmn:incoming>
+      <bpmn:incoming>Flow_LoopDocs</bpmn:incoming>
+      <bpmn:outgoing>Flow_05</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="Gateway_DocsCompletos" name="Documentação Completa?">
+      <bpmn:incoming>Flow_05</bpmn:incoming>
+      <bpmn:outgoing>Flow_NaoCompleto</bpmn:outgoing>
+      <bpmn:outgoing>Flow_SimCompleto</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sendTask id="Task_NotificarPendencia" name="Notificar Pendência" messageRef="Message_EmailPendencia">
+      <bpmn:incoming>Flow_NaoCompleto</bpmn:incoming>
+      <bpmn:outgoing>Flow_06</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:eventBasedGateway id="Gateway_AguardaResposta">
+      <bpmn:incoming>Flow_06</bpmn:incoming>
+      <bpmn:outgoing>Flow_07_Timer</bpmn:outgoing>
+      <bpmn:outgoing>Flow_07_Msg</bpmn:outgoing>
+    </bpmn:eventBasedGateway>
+    <bpmn:intermediateCatchEvent id="Event_Timer48h" name="Prazo de 48h Expirado">
+      <bpmn:incoming>Flow_07_Timer</bpmn:incoming>
+      <bpmn:outgoing>Flow_08</bpmn:outgoing>
+      <bpmn:timerEventDefinition>
+        <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">PT48H</bpmn:timeDuration>
+      </bpmn:timerEventDefinition>
+    </bpmn:intermediateCatchEvent>
+    <bpmn:endEvent id="EndEvent_ExcluidoPrazo" name="Excluído (Prazo)">
+      <bpmn:incoming>Flow_09</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:intermediateCatchEvent id="Event_DocsFaltantesRecebidos" name="Documentos Faltantes Recebidos">
+      <bpmn:incoming>Flow_07_Msg</bpmn:incoming>
+      <bpmn:outgoing>Flow_LoopDocs</bpmn:outgoing>
+      <bpmn:messageEventDefinition messageRef="Message_EmailDocsFaltantes" />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:sendTask id="Task_EncaminharParaTerceirizada" name="Encaminhar para Terceirizada" messageRef="Message_DocsVerificacao">
+      <bpmn:incoming>Flow_SimCompleto</bpmn:incoming>
+      <bpmn:outgoing>Flow_10</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:receiveTask id="Task_ReceberParecerTerceirizada" name="Receber Parecer da Terceirizada" messageRef="Message_ParecerReferencias">
+      <bpmn:incoming>Flow_10</bpmn:incoming>
+      <bpmn:outgoing>Flow_11</bpmn:outgoing>
+    </bpmn:receiveTask>
+    <bpmn:receiveTask id="Task_ReceberValidacaoTestes" name="Receber Validação de Testes" messageRef="Message_ResultadoValidacao">
+      <bpmn:incoming>Flow_12</bpmn:incoming>
+      <bpmn:outgoing>Flow_13</bpmn:outgoing>
+    </bpmn:receiveTask>
+    <bpmn:sendTask id="Task_NotificarExclusaoValidacao" name="Notificar Exclusão (Validação)" messageRef="Message_EmailExclusaoValidacao">
+      <bpmn:incoming>Flow_NaoValidado</bpmn:incoming>
+      <bpmn:incoming>Flow_RefNao</bpmn:incoming>
+      <bpmn:outgoing>Flow_14</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:endEvent id="EndEvent_ExcluidoValidacao" name="Excluído (Validação)">
+      <bpmn:incoming>Flow_14</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:userTask id="Task_AvaliarCandidaturas" name="Avaliar Candidaturas em Reunião">
+      <bpmn:incoming>Flow_15</bpmn:incoming>
+      <bpmn:outgoing>Flow_16</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="Task_NotificarRHResultados" name="Notificar RH dos Resultados">
+      <bpmn:incoming>Flow_16</bpmn:incoming>
+      <bpmn:outgoing>Flow_17</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="Task_CadastrarResultados" name="Cadastrar Resultados no Sistema">
+      <bpmn:incoming>Flow_17</bpmn:incoming>
+      <bpmn:outgoing>Flow_18</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sendTask id="Task_NotificarCandidatosAuto" name="Notificar Candidatos (Automático)" messageRef="Message_NotificacaoResultado">
+      <bpmn:incoming>Flow_18</bpmn:incoming>
+      <bpmn:outgoing>Flow_19</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:endEvent id="EndEvent_Reprovado" name="Não Selecionado">
+      <bpmn:incoming>Flow_NaoAprovado</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sendTask id="Task_EnviarEmailOferta" name="Enviar E-mail de Oferta de Emprego" messageRef="Message_EmailOferta">
+      <bpmn:incoming>Flow_SimAprovado</bpmn:incoming>
+      <bpmn:outgoing>Flow_20</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:sendTask id="Task_NotificarExclusaoPrazo" name="Notificar Exclusão (Prazo)" messageRef="Message_EmailExclusaoPrazo">
+      <bpmn:incoming>Flow_08</bpmn:incoming>
+      <bpmn:outgoing>Flow_09</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:startEvent id="StartEvent_FormularioRecebido" name="Formulário Online Recebido">
+      <bpmn:outgoing>Flow_01</bpmn:outgoing>
+      <bpmn:messageEventDefinition messageRef="Message_FormularioOnline" />
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="Task_RegistrarInformacoes" name="Registrar Informações no Sistema">
+      <bpmn:incoming>Flow_01</bpmn:incoming>
+      <bpmn:outgoing>Flow_02</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Task_GerarPDF" name="Gerar PDF para Download">
+      <bpmn:incoming>Flow_02</bpmn:incoming>
+      <bpmn:outgoing>Flow_03</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:userTask id="Task_EscalarAtrasoTerceirizada" name="Escalar Atraso da Terceirizada">
+      <bpmn:incoming>Flow_SLA3d</bpmn:incoming>
+      <bpmn:outgoing>Flow_SLA3d_End</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="EndEvent_AtrasoEscalado" name="Atraso Escalado">
+      <bpmn:incoming>Flow_SLA3d_End</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:exclusiveGateway id="Gateway_ReferenciasValidas" name="Referências Válidas?">
+      <bpmn:incoming>Flow_11</bpmn:incoming>
+      <bpmn:outgoing>Flow_RefSim</bpmn:outgoing>
+      <bpmn:outgoing>Flow_RefNao</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:exclusiveGateway id="Gateway_TestesValidos" name="Testes Válidos?">
+      <bpmn:incoming>Flow_13</bpmn:incoming>
+      <bpmn:outgoing>Flow_NaoValidado</bpmn:outgoing>
+      <bpmn:outgoing>Flow_SimValidado</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="Task_EncaminharParaComissao" name="Encaminhar Candidatura para Comissão">
+      <bpmn:incoming>Flow_SimValidado</bpmn:incoming>
+      <bpmn:outgoing>Flow_15</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sendTask id="Task_SolicitarValidacaoTestes" name="Solicitar Validação de Testes" messageRef="Message_SolicitacaoValidacao">
+      <bpmn:incoming>Flow_RefSim</bpmn:incoming>
+      <bpmn:outgoing>Flow_12</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:exclusiveGateway id="Gateway_Aprovado" name="Candidato Aprovado?">
+      <bpmn:incoming>Flow_19</bpmn:incoming>
+      <bpmn:outgoing>Flow_NaoAprovado</bpmn:outgoing>
+      <bpmn:outgoing>Flow_SimAprovado</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="EndEvent_Aprovado" name="Aprovado">
+      <bpmn:incoming>Flow_20</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:subProcess id="EventSubProcess_SLA7d" triggeredByEvent="true">
+      <bpmn:startEvent id="StartEvent_SLA7d" name="Início do Prazo de 7 dias" isInterrupting="false">
+        <bpmn:outgoing>Flow_SLA7d_Start</bpmn:outgoing>
+        <bpmn:timerEventDefinition>
+          <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">P7D</bpmn:timeDuration>
+        </bpmn:timerEventDefinition>
+      </bpmn:startEvent>
+      <bpmn:userTask id="Task_MonitorarSLA_RH" name="Monitorar SLA de 7 dias do RH">
+        <bpmn:incoming>Flow_SLA7d_Start</bpmn:incoming>
+        <bpmn:outgoing>Flow_SLA7d_End</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:endEvent id="EndEvent_SLA_RH_Monitorado" name="SLA Monitorado">
+        <bpmn:incoming>Flow_SLA7d_End</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:sequenceFlow id="Flow_SLA7d_Start" sourceRef="StartEvent_SLA7d" targetRef="Task_MonitorarSLA_RH" />
+      <bpmn:sequenceFlow id="Flow_SLA7d_End" sourceRef="Task_MonitorarSLA_RH" targetRef="EndEvent_SLA_RH_Monitorado" />
+    </bpmn:subProcess>
+    <bpmn:boundaryEvent id="Event_Timer3d" name="Prazo de 3 dias" cancelActivity="false" attachedToRef="Task_ReceberParecerTerceirizada">
+      <bpmn:outgoing>Flow_SLA3d</bpmn:outgoing>
+      <bpmn:timerEventDefinition>
+        <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">P3D</bpmn:timeDuration>
+      </bpmn:timerEventDefinition>
+    </bpmn:boundaryEvent>
+    <bpmn:sequenceFlow id="Flow_03" sourceRef="Task_GerarPDF" targetRef="Task_ReceberDocumentosEmail" />
+    <bpmn:sequenceFlow id="Flow_04" sourceRef="Task_ReceberDocumentosEmail" targetRef="Task_VerificarDocumentacao" />
+    <bpmn:sequenceFlow id="Flow_LoopDocs" sourceRef="Event_DocsFaltantesRecebidos" targetRef="Task_VerificarDocumentacao" />
+    <bpmn:sequenceFlow id="Flow_05" sourceRef="Task_VerificarDocumentacao" targetRef="Gateway_DocsCompletos" />
+    <bpmn:sequenceFlow id="Flow_NaoCompleto" name="Não" sourceRef="Gateway_DocsCompletos" targetRef="Task_NotificarPendencia" />
+    <bpmn:sequenceFlow id="Flow_SimCompleto" name="Sim" sourceRef="Gateway_DocsCompletos" targetRef="Task_EncaminharParaTerceirizada" />
+    <bpmn:sequenceFlow id="Flow_06" sourceRef="Task_NotificarPendencia" targetRef="Gateway_AguardaResposta" />
+    <bpmn:sequenceFlow id="Flow_07_Timer" sourceRef="Gateway_AguardaResposta" targetRef="Event_Timer48h" />
+    <bpmn:sequenceFlow id="Flow_07_Msg" sourceRef="Gateway_AguardaResposta" targetRef="Event_DocsFaltantesRecebidos" />
+    <bpmn:sequenceFlow id="Flow_08" sourceRef="Event_Timer48h" targetRef="Task_NotificarExclusaoPrazo" />
+    <bpmn:sequenceFlow id="Flow_09" sourceRef="Task_NotificarExclusaoPrazo" targetRef="EndEvent_ExcluidoPrazo" />
+    <bpmn:sequenceFlow id="Flow_10" sourceRef="Task_EncaminharParaTerceirizada" targetRef="Task_ReceberParecerTerceirizada" />
+    <bpmn:sequenceFlow id="Flow_11" sourceRef="Task_ReceberParecerTerceirizada" targetRef="Gateway_ReferenciasValidas" />
+    <bpmn:sequenceFlow id="Flow_12" sourceRef="Task_SolicitarValidacaoTestes" targetRef="Task_ReceberValidacaoTestes" />
+    <bpmn:sequenceFlow id="Flow_13" sourceRef="Task_ReceberValidacaoTestes" targetRef="Gateway_TestesValidos" />
+    <bpmn:sequenceFlow id="Flow_RefNao" name="Não" sourceRef="Gateway_ReferenciasValidas" targetRef="Task_NotificarExclusaoValidacao" />
+    <bpmn:sequenceFlow id="Flow_NaoValidado" name="Não" sourceRef="Gateway_TestesValidos" targetRef="Task_NotificarExclusaoValidacao" />
+    <bpmn:sequenceFlow id="Flow_14" sourceRef="Task_NotificarExclusaoValidacao" targetRef="EndEvent_ExcluidoValidacao" />
+    <bpmn:sequenceFlow id="Flow_15" sourceRef="Task_EncaminharParaComissao" targetRef="Task_AvaliarCandidaturas" />
+    <bpmn:sequenceFlow id="Flow_16" sourceRef="Task_AvaliarCandidaturas" targetRef="Task_NotificarRHResultados" />
+    <bpmn:sequenceFlow id="Flow_17" sourceRef="Task_NotificarRHResultados" targetRef="Task_CadastrarResultados" />
+    <bpmn:sequenceFlow id="Flow_18" sourceRef="Task_CadastrarResultados" targetRef="Task_NotificarCandidatosAuto" />
+    <bpmn:sequenceFlow id="Flow_19" sourceRef="Task_NotificarCandidatosAuto" targetRef="Gateway_Aprovado" />
+    <bpmn:sequenceFlow id="Flow_NaoAprovado" name="Não" sourceRef="Gateway_Aprovado" targetRef="EndEvent_Reprovado" />
+    <bpmn:sequenceFlow id="Flow_SimAprovado" name="Sim" sourceRef="Gateway_Aprovado" targetRef="Task_EnviarEmailOferta" />
+    <bpmn:sequenceFlow id="Flow_20" sourceRef="Task_EnviarEmailOferta" targetRef="EndEvent_Aprovado" />
+    <bpmn:sequenceFlow id="Flow_01" sourceRef="StartEvent_FormularioRecebido" targetRef="Task_RegistrarInformacoes" />
+    <bpmn:sequenceFlow id="Flow_02" sourceRef="Task_RegistrarInformacoes" targetRef="Task_GerarPDF" />
+    <bpmn:sequenceFlow id="Flow_SLA3d" sourceRef="Event_Timer3d" targetRef="Task_EscalarAtrasoTerceirizada" />
+    <bpmn:sequenceFlow id="Flow_SLA3d_End" sourceRef="Task_EscalarAtrasoTerceirizada" targetRef="EndEvent_AtrasoEscalado" />
+    <bpmn:sequenceFlow id="Flow_RefSim" name="Sim" sourceRef="Gateway_ReferenciasValidas" targetRef="Task_SolicitarValidacaoTestes" />
+    <bpmn:sequenceFlow id="Flow_SimValidado" name="Sim" sourceRef="Gateway_TestesValidos" targetRef="Task_EncaminharParaComissao" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Collaboration_ProcessoSeletivo">
+      <bpmndi:BPMNShape id="Participant_Terceirizada_di" bpmnElement="Participant_Terceirizada" isHorizontal="true">
+        <dc:Bounds x="160" y="1270" width="3000" height="100" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Participant_Avaliadores_di" bpmnElement="Participant_Avaliadores" isHorizontal="true">
+        <dc:Bounds x="160" y="1390" width="3000" height="100" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Participant_Candidato_di" bpmnElement="Participant_Candidato" isHorizontal="true">
+        <dc:Bounds x="160" y="80" width="3000" height="100" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Participant_ABC_di" bpmnElement="Participant_ABC" isHorizontal="true">
+        <dc:Bounds x="136" y="211" width="3024" height="1040" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Comissao_di" bpmnElement="Lane_Comissao" isHorizontal="true">
+        <dc:Bounds x="166" y="1051" width="2994" height="200" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_RH_di" bpmnElement="Lane_RH" isHorizontal="true">
+        <dc:Bounds x="166" y="429" width="2994" height="622" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Sistema_di" bpmnElement="Lane_Sistema" isHorizontal="true">
+        <dc:Bounds x="166" y="211" width="2994" height="218" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ReceberDocumentosEmail_di" bpmnElement="Task_ReceberDocumentosEmail">
+        <dc:Bounds x="520" y="601" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_VerificarDocumentacao_di" bpmnElement="Task_VerificarDocumentacao">
+        <dc:Bounds x="700" y="601" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_DocsCompletos_di" bpmnElement="Gateway_DocsCompletos" isMarkerVisible="true">
+        <dc:Bounds x="855" y="619" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="843" y="676" width="75" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_NotificarPendencia_di" bpmnElement="Task_NotificarPendencia">
+        <dc:Bounds x="950" y="751" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_AguardaResposta_di" bpmnElement="Gateway_AguardaResposta">
+        <dc:Bounds x="1115" y="769" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_Timer48h_di" bpmnElement="Event_Timer48h">
+        <dc:Bounds x="1222" y="753" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1207" y="719" width="66" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_ExcluidoPrazo_di" bpmnElement="EndEvent_ExcluidoPrazo">
+        <dc:Bounds x="1482" y="753" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1459" y="796" width="82" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_DocsFaltantesRecebidos_di" bpmnElement="Event_DocsFaltantesRecebidos">
+        <dc:Bounds x="1222" y="813" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1268" y="811" width="62" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_EncaminharParaTerceirizada_di" bpmnElement="Task_EncaminharParaTerceirizada">
+        <dc:Bounds x="980" y="601" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ReceberParecerTerceirizada_di" bpmnElement="Task_ReceberParecerTerceirizada">
+        <dc:Bounds x="1180" y="601" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ReceberValidacaoTestes_di" bpmnElement="Task_ReceberValidacaoTestes">
+        <dc:Bounds x="1700" y="601" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_NotificarExclusaoValidacao_di" bpmnElement="Task_NotificarExclusaoValidacao">
+        <dc:Bounds x="1950" y="751" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_ExcluidoValidacao_di" bpmnElement="EndEvent_ExcluidoValidacao">
+        <dc:Bounds x="2102" y="773" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2093" y="816" width="56" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_AvaliarCandidaturas_di" bpmnElement="Task_AvaliarCandidaturas">
+        <dc:Bounds x="1980" y="1111" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_NotificarRHResultados_di" bpmnElement="Task_NotificarRHResultados">
+        <dc:Bounds x="2150" y="1111" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_CadastrarResultados_di" bpmnElement="Task_CadastrarResultados">
+        <dc:Bounds x="2320" y="601" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_NotificarCandidatosAuto_di" bpmnElement="Task_NotificarCandidatosAuto">
+        <dc:Bounds x="2320" y="361" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_Reprovado_di" bpmnElement="EndEvent_Reprovado">
+        <dc:Bounds x="2582" y="443" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2558" y="486" width="85" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_EnviarEmailOferta_di" bpmnElement="Task_EnviarEmailOferta">
+        <dc:Bounds x="2570" y="361" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_NotificarExclusaoPrazo_di" bpmnElement="Task_NotificarExclusaoPrazo">
+        <dc:Bounds x="1340" y="841" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="StartEvent_FormularioRecebido_di" bpmnElement="StartEvent_FormularioRecebido">
+        <dc:Bounds x="242" y="343" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="216" y="386" width="88" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_RegistrarInformacoes_di" bpmnElement="Task_RegistrarInformacoes">
+        <dc:Bounds x="360" y="281" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_GerarPDF_di" bpmnElement="Task_GerarPDF">
+        <dc:Bounds x="520" y="281" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_EscalarAtrasoTerceirizada_di" bpmnElement="Task_EscalarAtrasoTerceirizada">
+        <dc:Bounds x="1270" y="431" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_AtrasoEscalado_di" bpmnElement="EndEvent_AtrasoEscalado">
+        <dc:Bounds x="1452" y="453" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1430" y="496" width="80" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_ReferenciasValidas_di" bpmnElement="Gateway_ReferenciasValidas" isMarkerVisible="true">
+        <dc:Bounds x="1355" y="656" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1350" y="618.5" width="59" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_TestesValidos_di" bpmnElement="Gateway_TestesValidos" isMarkerVisible="true">
+        <dc:Bounds x="1855" y="586" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1841" y="562" width="78" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_EncaminharParaComissao_di" bpmnElement="Task_EncaminharParaComissao">
+        <dc:Bounds x="1970" y="581" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_SolicitarValidacaoTestes_di" bpmnElement="Task_SolicitarValidacaoTestes">
+        <dc:Bounds x="1520" y="601" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_Aprovado_di" bpmnElement="Gateway_Aprovado" isMarkerVisible="true">
+        <dc:Bounds x="2475" y="336" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2473" y="298.5" width="53" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_Aprovado_di" bpmnElement="EndEvent_Aprovado">
+        <dc:Bounds x="2702" y="362" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2697" y="405" width="47" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EventSubProcess_SLA7d_di" bpmnElement="EventSubProcess_SLA7d" isExpanded="true">
+        <dc:Bounds x="400" y="901" width="360" height="100" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="StartEvent_SLA7d_di" bpmnElement="StartEvent_SLA7d">
+        <dc:Bounds x="422" y="933" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="396" y="976" width="89" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_MonitorarSLA_RH_di" bpmnElement="Task_MonitorarSLA_RH">
+        <dc:Bounds x="510" y="911" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_SLA_RH_Monitorado_di" bpmnElement="EndEvent_SLA_RH_Monitorado">
+        <dc:Bounds x="662" y="933" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="641" y="976" width="79" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_SLA7d_Start_di" bpmnElement="Flow_SLA7d_Start">
+        <di:waypoint x="458" y="951" />
+        <di:waypoint x="510" y="951" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_SLA7d_End_di" bpmnElement="Flow_SLA7d_End">
+        <di:waypoint x="610" y="951" />
+        <di:waypoint x="662" y="951" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="Event_Timer3d_di" bpmnElement="Event_Timer3d">
+        <dc:Bounds x="1262" y="623" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1282" y="594" width="77" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_03_di" bpmnElement="Flow_03">
+        <di:waypoint x="570" y="361" />
+        <di:waypoint x="570" y="601" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_04_di" bpmnElement="Flow_04">
+        <di:waypoint x="620" y="641" />
+        <di:waypoint x="700" y="641" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_LoopDocs_di" bpmnElement="Flow_LoopDocs">
+        <di:waypoint x="1240" y="849" />
+        <di:waypoint x="1240" y="881" />
+        <di:waypoint x="750" y="881" />
+        <di:waypoint x="750" y="681" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_05_di" bpmnElement="Flow_05">
+        <di:waypoint x="800" y="641" />
+        <di:waypoint x="855" y="644" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_NaoCompleto_di" bpmnElement="Flow_NaoCompleto">
+        <di:waypoint x="880" y="669" />
+        <di:waypoint x="880" y="791" />
+        <di:waypoint x="950" y="791" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="890" y="727" width="21" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_SimCompleto_di" bpmnElement="Flow_SimCompleto">
+        <di:waypoint x="905" y="644" />
+        <di:waypoint x="980" y="641" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="930" y="626" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_06_di" bpmnElement="Flow_06">
+        <di:waypoint x="1050" y="791" />
+        <di:waypoint x="1115" y="794" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_07_Timer_di" bpmnElement="Flow_07_Timer">
+        <di:waypoint x="1140" y="794" />
+        <di:waypoint x="1140" y="771" />
+        <di:waypoint x="1222" y="771" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_07_Msg_di" bpmnElement="Flow_07_Msg">
+        <di:waypoint x="1140" y="794" />
+        <di:waypoint x="1140" y="831" />
+        <di:waypoint x="1222" y="831" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_08_di" bpmnElement="Flow_08">
+        <di:waypoint x="1258" y="771" />
+        <di:waypoint x="1299" y="771" />
+        <di:waypoint x="1299" y="881" />
+        <di:waypoint x="1340" y="881" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_09_di" bpmnElement="Flow_09">
+        <di:waypoint x="1440" y="881" />
+        <di:waypoint x="1461" y="881" />
+        <di:waypoint x="1461" y="771" />
+        <di:waypoint x="1482" y="771" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_10_di" bpmnElement="Flow_10">
+        <di:waypoint x="1080" y="641" />
+        <di:waypoint x="1180" y="641" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_11_di" bpmnElement="Flow_11">
+        <di:waypoint x="1280" y="639" />
+        <di:waypoint x="1318" y="639" />
+        <di:waypoint x="1318" y="682" />
+        <di:waypoint x="1356" y="682" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_RefSim_di" bpmnElement="Flow_RefSim">
+        <di:waypoint x="1404" y="682" />
+        <di:waypoint x="1453" y="682" />
+        <di:waypoint x="1453" y="639" />
+        <di:waypoint x="1520" y="639" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1417" y="665" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_12_di" bpmnElement="Flow_12">
+        <di:waypoint x="1620" y="641" />
+        <di:waypoint x="1700" y="641" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_13_di" bpmnElement="Flow_13">
+        <di:waypoint x="1800" y="638" />
+        <di:waypoint x="1828" y="638" />
+        <di:waypoint x="1828" y="612" />
+        <di:waypoint x="1856" y="612" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_RefNao_di" bpmnElement="Flow_RefNao">
+        <di:waypoint x="1380" y="706" />
+        <di:waypoint x="1380" y="791" />
+        <di:waypoint x="1950" y="791" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1390" y="744" width="21" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_NaoValidado_di" bpmnElement="Flow_NaoValidado">
+        <di:waypoint x="1880" y="636" />
+        <di:waypoint x="1880" y="791" />
+        <di:waypoint x="1950" y="791" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1890" y="712" width="21" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_14_di" bpmnElement="Flow_14">
+        <di:waypoint x="2050" y="791" />
+        <di:waypoint x="2102" y="791" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_15_di" bpmnElement="Flow_15">
+        <di:waypoint x="2020" y="661" />
+        <di:waypoint x="2020" y="886" />
+        <di:waypoint x="2030" y="886" />
+        <di:waypoint x="2030" y="1111" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_16_di" bpmnElement="Flow_16">
+        <di:waypoint x="2080" y="1151" />
+        <di:waypoint x="2150" y="1151" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_17_di" bpmnElement="Flow_17">
+        <di:waypoint x="2200" y="1111" />
+        <di:waypoint x="2200" y="641" />
+        <di:waypoint x="2320" y="641" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_18_di" bpmnElement="Flow_18">
+        <di:waypoint x="2370" y="601" />
+        <di:waypoint x="2370" y="441" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_19_di" bpmnElement="Flow_19">
+        <di:waypoint x="2420" y="398" />
+        <di:waypoint x="2448" y="398" />
+        <di:waypoint x="2448" y="362" />
+        <di:waypoint x="2476" y="362" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_NaoAprovado_di" bpmnElement="Flow_NaoAprovado">
+        <di:waypoint x="2500" y="386" />
+        <di:waypoint x="2500" y="461" />
+        <di:waypoint x="2582" y="461" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2510" y="413" width="21" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_SimAprovado_di" bpmnElement="Flow_SimAprovado">
+        <di:waypoint x="2523" y="363" />
+        <di:waypoint x="2548" y="363" />
+        <di:waypoint x="2548" y="398" />
+        <di:waypoint x="2570" y="398" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2524" y="346" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_20_di" bpmnElement="Flow_20">
+        <di:waypoint x="2670" y="401" />
+        <di:waypoint x="2686" y="401" />
+        <di:waypoint x="2686" y="380" />
+        <di:waypoint x="2702" y="380" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_01_di" bpmnElement="Flow_01">
+        <di:waypoint x="278" y="361" />
+        <di:waypoint x="314" y="361" />
+        <di:waypoint x="314" y="321" />
+        <di:waypoint x="360" y="321" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_02_di" bpmnElement="Flow_02">
+        <di:waypoint x="460" y="321" />
+        <di:waypoint x="520" y="321" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_SLA3d_di" bpmnElement="Flow_SLA3d">
+        <di:waypoint x="1298" y="641" />
+        <di:waypoint x="1320" y="641" />
+        <di:waypoint x="1320" y="511" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_SLA3d_End_di" bpmnElement="Flow_SLA3d_End">
+        <di:waypoint x="1370" y="471" />
+        <di:waypoint x="1452" y="471" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_SimValidado_di" bpmnElement="Flow_SimValidado">
+        <di:waypoint x="1904" y="612" />
+        <di:waypoint x="1943" y="612" />
+        <di:waypoint x="1943" y="619" />
+        <di:waypoint x="1970" y="619" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1912" y="595" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Msg_Formulario_di" bpmnElement="Flow_Msg_Formulario">
+        <di:waypoint x="260" y="180" />
+        <di:waypoint x="260" y="343" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Msg_EmailDocs_di" bpmnElement="Flow_Msg_EmailDocs">
+        <di:waypoint x="570" y="180" />
+        <di:waypoint x="570" y="601" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Msg_Pendencia_di" bpmnElement="Flow_Msg_Pendencia">
+        <di:waypoint x="1000" y="751" />
+        <di:waypoint x="1000" y="180" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Msg_DocsFaltantes_di" bpmnElement="Flow_Msg_DocsFaltantes">
+        <di:waypoint x="1240" y="180" />
+        <di:waypoint x="1240" y="813" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Msg_ExclusaoPrazo_di" bpmnElement="Flow_Msg_ExclusaoPrazo">
+        <di:waypoint x="1390" y="841" />
+        <di:waypoint x="1390" y="180" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Msg_ParaTerceirizada_di" bpmnElement="Flow_Msg_ParaTerceirizada">
+        <di:waypoint x="1030" y="681" />
+        <di:waypoint x="1030" y="1270" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Msg_DaTerceirizada_di" bpmnElement="Flow_Msg_DaTerceirizada">
+        <di:waypoint x="1230" y="1270" />
+        <di:waypoint x="1230" y="681" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Msg_ParaAvaliadores_di" bpmnElement="Flow_Msg_ParaAvaliadores">
+        <di:waypoint x="1570" y="681" />
+        <di:waypoint x="1570" y="1390" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Msg_DosAvaliadores_di" bpmnElement="Flow_Msg_DosAvaliadores">
+        <di:waypoint x="1750" y="1390" />
+        <di:waypoint x="1750" y="681" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Msg_ExclusaoValidacao_di" bpmnElement="Flow_Msg_ExclusaoValidacao">
+        <di:waypoint x="2000" y="751" />
+        <di:waypoint x="2000" y="180" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Msg_NotificacaoAuto_di" bpmnElement="Flow_Msg_NotificacaoAuto">
+        <di:waypoint x="2370" y="361" />
+        <di:waypoint x="2370" y="180" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Msg_Oferta_di" bpmnElement="Flow_Msg_Oferta">
+        <di:waypoint x="2620" y="361" />
+        <di:waypoint x="2620" y="180" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

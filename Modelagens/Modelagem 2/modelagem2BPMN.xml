@@ -1,0 +1,807 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_1" targetNamespace="http://bpmn.io/schema/bpmn" exporter="bpmn-js (https://demo.bpmn.io)" exporterVersion="18.6.1">
+  <bpmn:collaboration id="Collaboration_ProducaoPET">
+    <bpmn:participant id="Participant_Producao" name="Processo de produção de garrafas PET" processRef="Process_Producao" />
+    <bpmn:participant id="Participant_Cliente" name="Processo de solicitação" processRef="Process_Cliente" />
+    <bpmn:messageFlow id="MessageFlow_Solicitacao" sourceRef="Task_SolicitarCompra" targetRef="Start_SolicitacaoRecebida" />
+    <bpmn:messageFlow id="MessageFlow_EnviarPrototipo" sourceRef="Task_EnviarPrototipo" targetRef="Task_ReceberPrototipo" />
+    <bpmn:messageFlow id="MessageFlow_RespostaPrototipo" sourceRef="Task_EnviarResposta" targetRef="Task_ReceberResposta" />
+  </bpmn:collaboration>
+  <bpmn:process id="Process_Producao" isExecutable="false">
+    <bpmn:laneSet id="LaneSet_Producao">
+      <bpmn:lane id="Lane_Operario" name="Operário">
+        <bpmn:flowNodeRef>Task_VerificarProduto</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gate_InconsistenciaEncontrada</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_SepararGarrafa</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_RegistrarFalha</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_EncaixotarGarrafa</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gate_JoinVerificacao</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gate_RemessaFinalizada</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_AgruparCaixas</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_DestinarAoDeposito</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_NotificarConclusao</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_Injecao" name="Injeção">
+        <bpmn:flowNodeRef>Gate_JoinProducaoRotulos</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_AdicionarTampaRotulo</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_Sopro" name="Sopro">
+        <bpmn:flowNodeRef>Task_InjetarMateriaPrima</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_CriarPreFormas</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_SoprarGarrafas</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Event_Aguardar80Graus</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_Design" name="Design">
+        <bpmn:flowNodeRef>Task_DesenvolverRotulos</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Sub_DesenvolvimentoPrototipo</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_Administracao" name="Administração">
+        <bpmn:flowNodeRef>Start_SolicitacaoRecebida</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_DefinirContratos</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gate_SplitOrcamentoRotulos</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_RealizarOrcamento</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_SolicitacaoRejeitada</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gate_ContratoFechado</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_ProcessoEncerrado</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ExtrairRelatorioErros</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ReceberNotificacaoConclusao</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="Start_SolicitacaoRecebida" name="Solicitação de Compra Recebida">
+      <bpmn:outgoing>Flow_001</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="MessageEventDefinition_Start" />
+    </bpmn:startEvent>
+    <bpmn:userTask id="Task_DefinirContratos" name="Definir contratos, prazos e valores">
+      <bpmn:incoming>Flow_001</bpmn:incoming>
+      <bpmn:outgoing>Flow_002</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:parallelGateway id="Gate_SplitOrcamentoRotulos" name="Dividir Orçamento e Rótulos">
+      <bpmn:incoming>Flow_003</bpmn:incoming>
+      <bpmn:outgoing>Flow_004</bpmn:outgoing>
+      <bpmn:outgoing>Flow_005</bpmn:outgoing>
+    </bpmn:parallelGateway>
+    <bpmn:userTask id="Task_RealizarOrcamento" name="Realizar orçamento do projeto">
+      <bpmn:incoming>Flow_004</bpmn:incoming>
+      <bpmn:outgoing>Flow_006</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="End_SolicitacaoRejeitada" name="Solicitação Rejeitada">
+      <bpmn:incoming>Flow_ContratoNao</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:exclusiveGateway id="Gate_ContratoFechado" name="Contrato Fechado?">
+      <bpmn:incoming>Flow_002</bpmn:incoming>
+      <bpmn:outgoing>Flow_ContratoSim</bpmn:outgoing>
+      <bpmn:outgoing>Flow_ContratoNao</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="End_ProcessoEncerrado" name="Processo Encerrado">
+      <bpmn:incoming>Flow_023</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:userTask id="Task_ExtrairRelatorioErros" name="Extrair relatório de erros da base de dados">
+      <bpmn:incoming>Flow_022</bpmn:incoming>
+      <bpmn:outgoing>Flow_023</bpmn:outgoing>
+      <bpmn:property id="Property_1b6zyyd" name="__targetRef_placeholder" />
+      <bpmn:dataInputAssociation id="DataInputAssociation_1">
+        <bpmn:sourceRef>DataStore_Erros</bpmn:sourceRef>
+        <bpmn:targetRef>Property_1b6zyyd</bpmn:targetRef>
+      </bpmn:dataInputAssociation>
+    </bpmn:userTask>
+    <bpmn:receiveTask id="Task_ReceberNotificacaoConclusao" name="Receber Notificação de Conclusão">
+      <bpmn:incoming>Flow_021</bpmn:incoming>
+      <bpmn:incoming>Flow_0cubr68</bpmn:incoming>
+      <bpmn:outgoing>Flow_022</bpmn:outgoing>
+    </bpmn:receiveTask>
+    <bpmn:userTask id="Task_VerificarProduto" name="Realizar verificação do produto">
+      <bpmn:incoming>Flow_013</bpmn:incoming>
+      <bpmn:incoming>Flow_1do8z0i</bpmn:incoming>
+      <bpmn:outgoing>Flow_014</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="Gate_InconsistenciaEncontrada" name="Inconsistência Encontrada?">
+      <bpmn:incoming>Flow_014</bpmn:incoming>
+      <bpmn:outgoing>Flow_FalhaSim</bpmn:outgoing>
+      <bpmn:outgoing>Flow_FalhaNao</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:manualTask id="Task_SepararGarrafa" name="Separar garrafa">
+      <bpmn:incoming>Flow_FalhaSim</bpmn:incoming>
+      <bpmn:outgoing>Flow_015</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:userTask id="Task_RegistrarFalha" name="Registrar falha na base de dados">
+      <bpmn:incoming>Flow_015</bpmn:incoming>
+      <bpmn:outgoing>Flow_016</bpmn:outgoing>
+      <bpmn:dataOutputAssociation id="DataOutputAssociation_1">
+        <bpmn:targetRef>DataStore_Erros</bpmn:targetRef>
+      </bpmn:dataOutputAssociation>
+    </bpmn:userTask>
+    <bpmn:manualTask id="Task_EncaixotarGarrafa" name="Inserir garrafa em lote de caixas">
+      <bpmn:incoming>Flow_FalhaNao</bpmn:incoming>
+      <bpmn:outgoing>Flow_017</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:dataStoreReference id="DataStore_Erros" name="Base de Dados de Erros" />
+    <bpmn:exclusiveGateway id="Gate_JoinVerificacao">
+      <bpmn:incoming>Flow_016</bpmn:incoming>
+      <bpmn:incoming>Flow_017</bpmn:incoming>
+      <bpmn:incoming>Flow_LoopQC</bpmn:incoming>
+      <bpmn:outgoing>Flow_018</bpmn:outgoing>
+      <bpmn:outgoing>Flow_1do8z0i</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:exclusiveGateway id="Gate_RemessaFinalizada" name="Remessa finalizada?">
+      <bpmn:incoming>Flow_018</bpmn:incoming>
+      <bpmn:outgoing>Flow_RemessaSim</bpmn:outgoing>
+      <bpmn:outgoing>Flow_LoopQC</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:manualTask id="Task_AgruparCaixas" name="Agrupar caixas">
+      <bpmn:incoming>Flow_RemessaSim</bpmn:incoming>
+      <bpmn:outgoing>Flow_019</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="Task_DestinarAoDeposito" name="Destinar caixas ao depósito">
+      <bpmn:incoming>Flow_019</bpmn:incoming>
+      <bpmn:outgoing>Flow_020</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:sendTask id="Task_NotificarConclusao" name="Notificar conclusão à Administração">
+      <bpmn:incoming>Flow_020</bpmn:incoming>
+      <bpmn:outgoing>Flow_021</bpmn:outgoing>
+      <bpmn:outgoing>Flow_0cubr68</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:parallelGateway id="Gate_JoinProducaoRotulos" name="Aguardar Garrafas e Rótulos">
+      <bpmn:incoming>Flow_010</bpmn:incoming>
+      <bpmn:incoming>Flow_011</bpmn:incoming>
+      <bpmn:outgoing>Flow_012</bpmn:outgoing>
+    </bpmn:parallelGateway>
+    <bpmn:manualTask id="Task_AdicionarTampaRotulo" name="Adicionar tampa e rótulo">
+      <bpmn:incoming>Flow_012</bpmn:incoming>
+      <bpmn:outgoing>Flow_013</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="Task_InjetarMateriaPrima" name="Injetar matéria-prima na pré-forma">
+      <bpmn:incoming>Flow_006</bpmn:incoming>
+      <bpmn:outgoing>Flow_007</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="Task_CriarPreFormas" name="Inserir tubos em moldes">
+      <bpmn:incoming>Flow_007</bpmn:incoming>
+      <bpmn:outgoing>Flow_008</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="Task_SoprarGarrafas" name="Aquecer e soprar pré-formas">
+      <bpmn:incoming>Flow_009</bpmn:incoming>
+      <bpmn:outgoing>Flow_010</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:intermediateCatchEvent id="Event_Aguardar80Graus" name="Aguardar Máquina Atingir 80°C">
+      <bpmn:incoming>Flow_008</bpmn:incoming>
+      <bpmn:outgoing>Flow_009</bpmn:outgoing>
+      <bpmn:conditionalEventDefinition id="ConditionalEventDefinition_1">
+        <bpmn:condition xsi:type="bpmn:tFormalExpression">temperatura_maquina &gt;= 80</bpmn:condition>
+      </bpmn:conditionalEventDefinition>
+    </bpmn:intermediateCatchEvent>
+    <bpmn:userTask id="Task_DesenvolverRotulos" name="Desenvolver e imprimir rótulos">
+      <bpmn:incoming>Flow_005</bpmn:incoming>
+      <bpmn:outgoing>Flow_011</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:subProcess id="Sub_DesenvolvimentoPrototipo" name="Desenvolvimento do Protótipo">
+      <bpmn:incoming>Flow_ContratoSim</bpmn:incoming>
+      <bpmn:outgoing>Flow_003</bpmn:outgoing>
+      <bpmn:startEvent id="Start_SubDesign" name="Início Design">
+        <bpmn:outgoing>Flow_Sub01</bpmn:outgoing>
+      </bpmn:startEvent>
+      <bpmn:userTask id="Task_ReuniaoRequisitos" name="Realizar reunião de requisitos com cliente">
+        <bpmn:incoming>Flow_Sub01</bpmn:incoming>
+        <bpmn:incoming>Flow_PrototipoNao</bpmn:incoming>
+        <bpmn:outgoing>Flow_Sub02</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:userTask id="Task_ElaborarPrototipo" name="Elaborar protótipo (software)">
+        <bpmn:incoming>Flow_Sub02</bpmn:incoming>
+        <bpmn:outgoing>Flow_Sub03</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:sendTask id="Task_EnviarPrototipo" name="Enviar protótipo por e-mail">
+        <bpmn:incoming>Flow_Sub03</bpmn:incoming>
+        <bpmn:outgoing>Flow_Sub04</bpmn:outgoing>
+      </bpmn:sendTask>
+      <bpmn:receiveTask id="Task_ReceberResposta" name="Receber resposta do cliente">
+        <bpmn:incoming>Flow_Sub04</bpmn:incoming>
+        <bpmn:outgoing>Flow_Sub05</bpmn:outgoing>
+      </bpmn:receiveTask>
+      <bpmn:exclusiveGateway id="Gate_PrototipoAprovado" name="Protótipo Aprovado?">
+        <bpmn:incoming>Flow_Sub05</bpmn:incoming>
+        <bpmn:outgoing>Flow_PrototipoNao</bpmn:outgoing>
+        <bpmn:outgoing>Flow_PrototipoSim</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:sequenceFlow id="Flow_Sub01" sourceRef="Start_SubDesign" targetRef="Task_ReuniaoRequisitos" />
+      <bpmn:sequenceFlow id="Flow_Sub02" sourceRef="Task_ReuniaoRequisitos" targetRef="Task_ElaborarPrototipo" />
+      <bpmn:sequenceFlow id="Flow_Sub03" sourceRef="Task_ElaborarPrototipo" targetRef="Task_EnviarPrototipo" />
+      <bpmn:sequenceFlow id="Flow_Sub04" sourceRef="Task_EnviarPrototipo" targetRef="Task_ReceberResposta" />
+      <bpmn:sequenceFlow id="Flow_Sub05" sourceRef="Task_ReceberResposta" targetRef="Gate_PrototipoAprovado" />
+      <bpmn:sequenceFlow id="Flow_PrototipoNao" name="Não (Revisar)" sourceRef="Gate_PrototipoAprovado" targetRef="Task_ReuniaoRequisitos" />
+      <bpmn:sequenceFlow id="Flow_PrototipoSim" name="Sim" sourceRef="Gate_PrototipoAprovado" targetRef="End_SubDesign" />
+      <bpmn:endEvent id="End_SubDesign" name="Protótipo Validado">
+        <bpmn:incoming>Flow_PrototipoSim</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:association id="Association_Loop" sourceRef="Gate_PrototipoAprovado" targetRef="Task_ReuniaoRequisitos" />
+    </bpmn:subProcess>
+    <bpmn:sequenceFlow id="Flow_001" sourceRef="Start_SolicitacaoRecebida" targetRef="Task_DefinirContratos" />
+    <bpmn:sequenceFlow id="Flow_002" sourceRef="Task_DefinirContratos" targetRef="Gate_ContratoFechado" />
+    <bpmn:sequenceFlow id="Flow_003" sourceRef="Sub_DesenvolvimentoPrototipo" targetRef="Gate_SplitOrcamentoRotulos" />
+    <bpmn:sequenceFlow id="Flow_004" name="Fluxo Orçamento e Produção" sourceRef="Gate_SplitOrcamentoRotulos" targetRef="Task_RealizarOrcamento" />
+    <bpmn:sequenceFlow id="Flow_005" name="Fluxo Rótulos" sourceRef="Gate_SplitOrcamentoRotulos" targetRef="Task_DesenvolverRotulos" />
+    <bpmn:sequenceFlow id="Flow_006" sourceRef="Task_RealizarOrcamento" targetRef="Task_InjetarMateriaPrima" />
+    <bpmn:sequenceFlow id="Flow_ContratoNao" name="Não" sourceRef="Gate_ContratoFechado" targetRef="End_SolicitacaoRejeitada" />
+    <bpmn:sequenceFlow id="Flow_ContratoSim" name="Sim" sourceRef="Gate_ContratoFechado" targetRef="Sub_DesenvolvimentoPrototipo" />
+    <bpmn:sequenceFlow id="Flow_023" sourceRef="Task_ExtrairRelatorioErros" targetRef="End_ProcessoEncerrado" />
+    <bpmn:sequenceFlow id="Flow_022" sourceRef="Task_ReceberNotificacaoConclusao" targetRef="Task_ExtrairRelatorioErros" />
+    <bpmn:sequenceFlow id="Flow_021" sourceRef="Task_NotificarConclusao" targetRef="Task_ReceberNotificacaoConclusao" />
+    <bpmn:sequenceFlow id="Flow_0cubr68" sourceRef="Task_NotificarConclusao" targetRef="Task_ReceberNotificacaoConclusao" />
+    <bpmn:sequenceFlow id="Flow_013" sourceRef="Task_AdicionarTampaRotulo" targetRef="Task_VerificarProduto" />
+    <bpmn:sequenceFlow id="Flow_1do8z0i" sourceRef="Gate_JoinVerificacao" targetRef="Task_VerificarProduto" />
+    <bpmn:sequenceFlow id="Flow_014" sourceRef="Task_VerificarProduto" targetRef="Gate_InconsistenciaEncontrada" />
+    <bpmn:sequenceFlow id="Flow_FalhaSim" name="Sim" sourceRef="Gate_InconsistenciaEncontrada" targetRef="Task_SepararGarrafa" />
+    <bpmn:sequenceFlow id="Flow_FalhaNao" name="Não" sourceRef="Gate_InconsistenciaEncontrada" targetRef="Task_EncaixotarGarrafa" />
+    <bpmn:sequenceFlow id="Flow_015" sourceRef="Task_SepararGarrafa" targetRef="Task_RegistrarFalha" />
+    <bpmn:sequenceFlow id="Flow_016" sourceRef="Task_RegistrarFalha" targetRef="Gate_JoinVerificacao" />
+    <bpmn:sequenceFlow id="Flow_017" sourceRef="Task_EncaixotarGarrafa" targetRef="Gate_JoinVerificacao" />
+    <bpmn:sequenceFlow id="Flow_LoopQC" name="Não" sourceRef="Gate_RemessaFinalizada" targetRef="Gate_JoinVerificacao" />
+    <bpmn:sequenceFlow id="Flow_018" sourceRef="Gate_JoinVerificacao" targetRef="Gate_RemessaFinalizada" />
+    <bpmn:sequenceFlow id="Flow_RemessaSim" name="Sim" sourceRef="Gate_RemessaFinalizada" targetRef="Task_AgruparCaixas" />
+    <bpmn:sequenceFlow id="Flow_019" sourceRef="Task_AgruparCaixas" targetRef="Task_DestinarAoDeposito" />
+    <bpmn:sequenceFlow id="Flow_020" sourceRef="Task_DestinarAoDeposito" targetRef="Task_NotificarConclusao" />
+    <bpmn:sequenceFlow id="Flow_010" sourceRef="Task_SoprarGarrafas" targetRef="Gate_JoinProducaoRotulos" />
+    <bpmn:sequenceFlow id="Flow_011" sourceRef="Task_DesenvolverRotulos" targetRef="Gate_JoinProducaoRotulos" />
+    <bpmn:sequenceFlow id="Flow_012" sourceRef="Gate_JoinProducaoRotulos" targetRef="Task_AdicionarTampaRotulo" />
+    <bpmn:sequenceFlow id="Flow_007" sourceRef="Task_InjetarMateriaPrima" targetRef="Task_CriarPreFormas" />
+    <bpmn:sequenceFlow id="Flow_008" sourceRef="Task_CriarPreFormas" targetRef="Event_Aguardar80Graus" />
+    <bpmn:sequenceFlow id="Flow_009" sourceRef="Event_Aguardar80Graus" targetRef="Task_SoprarGarrafas" />
+  </bpmn:process>
+  <bpmn:process id="Process_Cliente" isExecutable="false">
+    <bpmn:laneSet id="LaneSet_Cliente">
+      <bpmn:lane id="Lane_Cliente" name="Cliente">
+        <bpmn:flowNodeRef>Start_Solicitacao</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_SolicitarCompra</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_RevisarPrototipo</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_PrazoExpirado</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_ClienteConcluido</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_EnviarResposta</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gate_ClienteAprovou</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ReceberPrototipo</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Timer_15Dias</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="Start_Solicitacao" name="Solicitação Iniciada">
+      <bpmn:outgoing>Flow_Cli01</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sendTask id="Task_SolicitarCompra" name="Entrar em contato e solicitar compra">
+      <bpmn:incoming>Flow_Cli01</bpmn:incoming>
+      <bpmn:outgoing>Flow_Cli02</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:userTask id="Task_RevisarPrototipo" name="Revisar protótipo">
+      <bpmn:incoming>Flow_Cli03</bpmn:incoming>
+      <bpmn:outgoing>Flow_Cli04</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="End_PrazoExpirado" name="Prazo de Resposta Expirado">
+      <bpmn:incoming>Flow_CliTimeout</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="End_ClienteConcluido" name="Produção Autorizada">
+      <bpmn:incoming>Flow_Cli05</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sendTask id="Task_EnviarResposta" name="Enviar Resposta (Aprovação / Alteração)">
+      <bpmn:incoming>Flow_CliSim</bpmn:incoming>
+      <bpmn:incoming>Flow_CliNao</bpmn:incoming>
+      <bpmn:outgoing>Flow_Cli05</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:exclusiveGateway id="Gate_ClienteAprovou" name="Protótipo OK?">
+      <bpmn:incoming>Flow_Cli04</bpmn:incoming>
+      <bpmn:outgoing>Flow_CliSim</bpmn:outgoing>
+      <bpmn:outgoing>Flow_CliNao</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:receiveTask id="Task_ReceberPrototipo" name="Receber protótipo">
+      <bpmn:incoming>Flow_Cli02</bpmn:incoming>
+      <bpmn:outgoing>Flow_Cli03</bpmn:outgoing>
+    </bpmn:receiveTask>
+    <bpmn:boundaryEvent id="Timer_15Dias" name="15 Dias Úteis" attachedToRef="Task_RevisarPrototipo">
+      <bpmn:outgoing>Flow_CliTimeout</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="TimerEventDefinition_1">
+        <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">P15D</bpmn:timeDuration>
+      </bpmn:timerEventDefinition>
+    </bpmn:boundaryEvent>
+    <bpmn:sequenceFlow id="Flow_Cli01" sourceRef="Start_Solicitacao" targetRef="Task_SolicitarCompra" />
+    <bpmn:sequenceFlow id="Flow_Cli02" sourceRef="Task_SolicitarCompra" targetRef="Task_ReceberPrototipo" />
+    <bpmn:sequenceFlow id="Flow_Cli03" sourceRef="Task_ReceberPrototipo" targetRef="Task_RevisarPrototipo" />
+    <bpmn:sequenceFlow id="Flow_Cli04" sourceRef="Task_RevisarPrototipo" targetRef="Gate_ClienteAprovou" />
+    <bpmn:sequenceFlow id="Flow_CliTimeout" sourceRef="Timer_15Dias" targetRef="End_PrazoExpirado" />
+    <bpmn:sequenceFlow id="Flow_Cli05" sourceRef="Task_EnviarResposta" targetRef="End_ClienteConcluido" />
+    <bpmn:sequenceFlow id="Flow_CliSim" name="Sim" sourceRef="Gate_ClienteAprovou" targetRef="Task_EnviarResposta" />
+    <bpmn:sequenceFlow id="Flow_CliNao" name="Não" sourceRef="Gate_ClienteAprovou" targetRef="Task_EnviarResposta" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Collaboration_ProducaoPET">
+      <bpmndi:BPMNShape id="Participant_Producao_Shape" bpmnElement="Participant_Producao" isHorizontal="true">
+        <dc:Bounds x="160" y="400" width="2750" height="1490" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Operario_Shape" bpmnElement="Lane_Operario" isHorizontal="true">
+        <dc:Bounds x="190" y="1380" width="2720" height="510" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Injecao_Shape" bpmnElement="Lane_Injecao" isHorizontal="true">
+        <dc:Bounds x="190" y="1240" width="2720" height="140" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Sopro_Shape" bpmnElement="Lane_Sopro" isHorizontal="true">
+        <dc:Bounds x="190" y="1110" width="2720" height="130" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Design_Shape" bpmnElement="Lane_Design" isHorizontal="true">
+        <dc:Bounds x="190" y="660" width="2720" height="450" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Administracao_Shape" bpmnElement="Lane_Administracao" isHorizontal="true">
+        <dc:Bounds x="190" y="400" width="2720" height="260" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Start_SolicitacaoRecebida_Shape" bpmnElement="Start_SolicitacaoRecebida">
+        <dc:Bounds x="242" y="502" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="216" y="545" width="89" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_DefinirContratos_Shape" bpmnElement="Task_DefinirContratos">
+        <dc:Bounds x="330" y="480" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gate_SplitOrcamentoRotulos_Shape" bpmnElement="Gate_SplitOrcamentoRotulos">
+        <dc:Bounds x="705" y="455" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="686" y="418" width="89" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_RealizarOrcamento_Shape" bpmnElement="Task_RealizarOrcamento">
+        <dc:Bounds x="860" y="440" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_SolicitacaoRejeitada_Shape" bpmnElement="End_SolicitacaoRejeitada">
+        <dc:Bounds x="392" y="582" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="383" y="625" width="54" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gate_ContratoFechado_Shape" bpmnElement="Gate_ContratoFechado" isMarkerVisible="true">
+        <dc:Bounds x="485" y="445" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="486" y="415" width="50" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_ProcessoEncerrado_Shape" bpmnElement="End_ProcessoEncerrado">
+        <dc:Bounds x="2597" y="482" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2590" y="525" width="52" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ExtrairRelatorioErros_Shape" bpmnElement="Task_ExtrairRelatorioErros">
+        <dc:Bounds x="2430" y="430" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ReceberNotificacaoConclusao_Shape" bpmnElement="Task_ReceberNotificacaoConclusao">
+        <dc:Bounds x="2180" y="510" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_VerificarProduto_Shape" bpmnElement="Task_VerificarProduto">
+        <dc:Bounds x="1450" y="1527" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gate_InconsistenciaEncontrada_Shape" bpmnElement="Gate_InconsistenciaEncontrada" isMarkerVisible="true">
+        <dc:Bounds x="1605" y="1462" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1595" y="1424.5" width="70" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_SepararGarrafa_Shape" bpmnElement="Task_SepararGarrafa">
+        <dc:Bounds x="1770" y="1447" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_RegistrarFalha_Shape" bpmnElement="Task_RegistrarFalha">
+        <dc:Bounds x="1710" y="1653" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_EncaixotarGarrafa_Shape" bpmnElement="Task_EncaixotarGarrafa">
+        <dc:Bounds x="1780" y="1767" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DataStore_Erros_Shape" bpmnElement="DataStore_Erros">
+        <dc:Bounds x="1995" y="1682" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1983" y="1739" width="76" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gate_JoinVerificacao_Shape" bpmnElement="Gate_JoinVerificacao" isMarkerVisible="true">
+        <dc:Bounds x="2075" y="1472" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gate_RemessaFinalizada_Shape" bpmnElement="Gate_RemessaFinalizada" isMarkerVisible="true">
+        <dc:Bounds x="2255" y="1472" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2253" y="1434.5" width="53" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_AgruparCaixas_Shape" bpmnElement="Task_AgruparCaixas">
+        <dc:Bounds x="2380" y="1597" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_DestinarAoDeposito_Shape" bpmnElement="Task_DestinarAoDeposito">
+        <dc:Bounds x="2650" y="1697" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_NotificarConclusao_Shape" bpmnElement="Task_NotificarConclusao">
+        <dc:Bounds x="2650" y="1477" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gate_JoinProducaoRotulos_Shape" bpmnElement="Gate_JoinProducaoRotulos">
+        <dc:Bounds x="1345" y="1274" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1344" y="1331" width="53" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_AdicionarTampaRotulo_Shape" bpmnElement="Task_AdicionarTampaRotulo">
+        <dc:Bounds x="1450" y="1259" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_InjetarMateriaPrima_Shape" bpmnElement="Task_InjetarMateriaPrima">
+        <dc:Bounds x="860" y="1142" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_CriarPreFormas_Shape" bpmnElement="Task_CriarPreFormas">
+        <dc:Bounds x="1000" y="1142" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_SoprarGarrafas_Shape" bpmnElement="Task_SoprarGarrafas">
+        <dc:Bounds x="1230" y="1132" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_Aguardar80Graus_Shape" bpmnElement="Event_Aguardar80Graus">
+        <dc:Bounds x="1142" y="1154" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1116" y="1197" width="90" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_DesenvolverRotulos_Shape" bpmnElement="Task_DesenvolverRotulos">
+        <dc:Bounds x="780" y="850" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Sub_DesenvolvimentoPrototipo_Shape" bpmnElement="Sub_DesenvolvimentoPrototipo" isExpanded="true">
+        <dc:Bounds x="270" y="680" width="432" height="400" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ReuniaoRequisitos_Shape" bpmnElement="Task_ReuniaoRequisitos">
+        <dc:Bounds x="362" y="720" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ElaborarPrototipo_Shape" bpmnElement="Task_ElaborarPrototipo">
+        <dc:Bounds x="472" y="720" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_EnviarPrototipo_Shape" bpmnElement="Task_EnviarPrototipo">
+        <dc:Bounds x="582" y="720" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Start_SubDesign_Shape" bpmnElement="Start_SubDesign">
+        <dc:Bounds x="294" y="742" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="281" y="785" width="64" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_SubDesign_Shape" bpmnElement="End_SubDesign">
+        <dc:Bounds x="504" y="1022" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="478" y="1065" width="90" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gate_PrototipoAprovado_Shape" bpmnElement="Gate_PrototipoAprovado" isMarkerVisible="true">
+        <dc:Bounds x="497" y="925" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="535" y="982" width="53" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ReceberResposta_Shape" bpmnElement="Task_ReceberResposta">
+        <dc:Bounds x="472" y="830" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_Sub01_Di" bpmnElement="Flow_Sub01">
+        <di:waypoint x="330" y="760" />
+        <di:waypoint x="362" y="760" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_PrototipoNao_Di" bpmnElement="Flow_PrototipoNao">
+        <di:waypoint x="497" y="950" />
+        <di:waypoint x="412" y="950" />
+        <di:waypoint x="412" y="800" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="418" y="933" width="69" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Sub02_Di" bpmnElement="Flow_Sub02">
+        <di:waypoint x="462" y="760" />
+        <di:waypoint x="472" y="760" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Sub03_Di" bpmnElement="Flow_Sub03">
+        <di:waypoint x="572" y="760" />
+        <di:waypoint x="582" y="760" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Sub04_Di" bpmnElement="Flow_Sub04">
+        <di:waypoint x="632" y="800" />
+        <di:waypoint x="632" y="870" />
+        <di:waypoint x="572" y="870" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_PrototipoSim_Di" bpmnElement="Flow_PrototipoSim">
+        <di:waypoint x="522" y="975" />
+        <di:waypoint x="522" y="1022" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="492" y="993" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Sub05_Di" bpmnElement="Flow_Sub05">
+        <di:waypoint x="522" y="910" />
+        <di:waypoint x="522" y="925" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_001_Di" bpmnElement="Flow_001">
+        <di:waypoint x="278" y="520" />
+        <di:waypoint x="330" y="520" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_002_Di" bpmnElement="Flow_002">
+        <di:waypoint x="430" y="520" />
+        <di:waypoint x="458" y="520" />
+        <di:waypoint x="458" y="470" />
+        <di:waypoint x="485" y="470" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ContratoSim_Di" bpmnElement="Flow_ContratoSim">
+        <di:waypoint x="510" y="495" />
+        <di:waypoint x="510" y="680" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="530" y="603" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ContratoNao_Di" bpmnElement="Flow_ContratoNao">
+        <di:waypoint x="510" y="495" />
+        <di:waypoint x="510" y="600" />
+        <di:waypoint x="428" y="600" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="480" y="577" width="21" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_003_Di" bpmnElement="Flow_003">
+        <di:waypoint x="702" y="760" />
+        <di:waypoint x="730" y="760" />
+        <di:waypoint x="730" y="505" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_004_Di" bpmnElement="Flow_004">
+        <di:waypoint x="755" y="480" />
+        <di:waypoint x="860" y="480" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="767" y="496" width="85" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_005_Di" bpmnElement="Flow_005">
+        <di:waypoint x="730" y="505" />
+        <di:waypoint x="730" y="890" />
+        <di:waypoint x="780" y="890" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="746" y="698" width="68" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_006_Di" bpmnElement="Flow_006">
+        <di:waypoint x="910" y="520" />
+        <di:waypoint x="910" y="1142" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_010_Di" bpmnElement="Flow_010">
+        <di:waypoint x="1330" y="1172" />
+        <di:waypoint x="1370" y="1172" />
+        <di:waypoint x="1370" y="1274" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_011_Di" bpmnElement="Flow_011">
+        <di:waypoint x="880" y="890" />
+        <di:waypoint x="1370" y="890" />
+        <di:waypoint x="1370" y="1274" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_013_Di" bpmnElement="Flow_013">
+        <di:waypoint x="1500" y="1339" />
+        <di:waypoint x="1500" y="1527" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_021_Di" bpmnElement="Flow_021">
+        <di:waypoint x="2650" y="1517" />
+        <di:waypoint x="2380" y="1517" />
+        <di:waypoint x="2380" y="550" />
+        <di:waypoint x="2280" y="550" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_022_Di" bpmnElement="Flow_022">
+        <di:waypoint x="2280" y="550" />
+        <di:waypoint x="2355" y="550" />
+        <di:waypoint x="2355" y="470" />
+        <di:waypoint x="2430" y="470" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_023_Di" bpmnElement="Flow_023">
+        <di:waypoint x="2530" y="470" />
+        <di:waypoint x="2564" y="470" />
+        <di:waypoint x="2564" y="500" />
+        <di:waypoint x="2597" y="500" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0cubr68_di" bpmnElement="Flow_0cubr68">
+        <di:waypoint x="2700" y="1477" />
+        <di:waypoint x="2700" y="880" />
+        <di:waypoint x="2230" y="880" />
+        <di:waypoint x="2230" y="590" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1do8z0i_di" bpmnElement="Flow_1do8z0i">
+        <di:waypoint x="2075" y="1497" />
+        <di:waypoint x="1940" y="1497" />
+        <di:waypoint x="1940" y="1567" />
+        <di:waypoint x="1550" y="1567" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_014_Di" bpmnElement="Flow_014">
+        <di:waypoint x="1550" y="1567" />
+        <di:waypoint x="1630" y="1567" />
+        <di:waypoint x="1630" y="1512" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_FalhaSim_Di" bpmnElement="Flow_FalhaSim">
+        <di:waypoint x="1655" y="1487" />
+        <di:waypoint x="1770" y="1487" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1687" y="1499" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_FalhaNao_Di" bpmnElement="Flow_FalhaNao">
+        <di:waypoint x="1630" y="1512" />
+        <di:waypoint x="1630" y="1807" />
+        <di:waypoint x="1780" y="1807" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1638" y="1665" width="21" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_015_Di" bpmnElement="Flow_015">
+        <di:waypoint x="1820" y="1527" />
+        <di:waypoint x="1820" y="1590" />
+        <di:waypoint x="1760" y="1590" />
+        <di:waypoint x="1760" y="1653" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_016_Di" bpmnElement="Flow_016">
+        <di:waypoint x="1810" y="1693" />
+        <di:waypoint x="1898" y="1693" />
+        <di:waypoint x="1898" y="1497" />
+        <di:waypoint x="2075" y="1497" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_017_Di" bpmnElement="Flow_017">
+        <di:waypoint x="1880" y="1807" />
+        <di:waypoint x="2100" y="1807" />
+        <di:waypoint x="2100" y="1522" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_LoopQC_Di" bpmnElement="Flow_LoopQC">
+        <di:waypoint x="2255" y="1497" />
+        <di:waypoint x="2125" y="1497" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2179" y="1480" width="21" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_018_Di" bpmnElement="Flow_018">
+        <di:waypoint x="2125" y="1497" />
+        <di:waypoint x="2255" y="1497" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_RemessaSim_Di" bpmnElement="Flow_RemessaSim">
+        <di:waypoint x="2280" y="1522" />
+        <di:waypoint x="2280" y="1637" />
+        <di:waypoint x="2380" y="1637" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2293" y="1647" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_019_Di" bpmnElement="Flow_019">
+        <di:waypoint x="2430" y="1677" />
+        <di:waypoint x="2430" y="1737" />
+        <di:waypoint x="2650" y="1737" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_020_Di" bpmnElement="Flow_020">
+        <di:waypoint x="2650" y="1737" />
+        <di:waypoint x="2615" y="1737" />
+        <di:waypoint x="2615" y="1517" />
+        <di:waypoint x="2650" y="1517" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_012_Di" bpmnElement="Flow_012">
+        <di:waypoint x="1395" y="1299" />
+        <di:waypoint x="1450" y="1299" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_007_Di" bpmnElement="Flow_007">
+        <di:waypoint x="960" y="1182" />
+        <di:waypoint x="1000" y="1182" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_008_Di" bpmnElement="Flow_008">
+        <di:waypoint x="1100" y="1182" />
+        <di:waypoint x="1121" y="1182" />
+        <di:waypoint x="1121" y="1172" />
+        <di:waypoint x="1142" y="1172" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_009_Di" bpmnElement="Flow_009">
+        <di:waypoint x="1178" y="1172" />
+        <di:waypoint x="1230" y="1172" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="Participant_Cliente_Shape" bpmnElement="Participant_Cliente" isHorizontal="true">
+        <dc:Bounds x="160" y="80" width="1340" height="280" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Cliente_Shape" bpmnElement="Lane_Cliente" isHorizontal="true">
+        <dc:Bounds x="190" y="80" width="1310" height="280" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Start_Solicitacao_Shape" bpmnElement="Start_Solicitacao">
+        <dc:Bounds x="242" y="182" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="234" y="225" width="54" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_SolicitarCompra_Shape" bpmnElement="Task_SolicitarCompra">
+        <dc:Bounds x="330" y="160" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_RevisarPrototipo_Shape" bpmnElement="Task_RevisarPrototipo">
+        <dc:Bounds x="790" y="160" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_PrazoExpirado_Shape" bpmnElement="End_PrazoExpirado">
+        <dc:Bounds x="822" y="262" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="817" y="305" width="47" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_ClienteConcluido_Shape" bpmnElement="End_ClienteConcluido">
+        <dc:Bounds x="1312" y="182" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1304" y="225" width="53" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_EnviarResposta_Shape" bpmnElement="Task_EnviarResposta">
+        <dc:Bounds x="1150" y="160" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gate_ClienteAprovou_Shape" bpmnElement="Gate_ClienteAprovou" isMarkerVisible="true">
+        <dc:Bounds x="995" y="175" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1055" y="193" width="70" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ReceberPrototipo_Shape" bpmnElement="Task_ReceberPrototipo">
+        <dc:Bounds x="582" y="160" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Timer_15Dias_Shape" bpmnElement="Timer_15Dias">
+        <dc:Bounds x="872" y="222" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="897" y="263" width="66" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_Cli01_Di" bpmnElement="Flow_Cli01">
+        <di:waypoint x="278" y="200" />
+        <di:waypoint x="330" y="200" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Cli02_Di" bpmnElement="Flow_Cli02">
+        <di:waypoint x="430" y="200" />
+        <di:waypoint x="582" y="200" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Cli03_Di" bpmnElement="Flow_Cli03">
+        <di:waypoint x="682" y="200" />
+        <di:waypoint x="790" y="200" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Cli04_Di" bpmnElement="Flow_Cli04">
+        <di:waypoint x="890" y="200" />
+        <di:waypoint x="995" y="200" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_CliSim_Di" bpmnElement="Flow_CliSim">
+        <di:waypoint x="1020" y="175" />
+        <di:waypoint x="1020" y="120" />
+        <di:waypoint x="1200" y="120" />
+        <di:waypoint x="1200" y="160" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1103" y="103" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_CliNao_Di" bpmnElement="Flow_CliNao">
+        <di:waypoint x="1020" y="225" />
+        <di:waypoint x="1020" y="280" />
+        <di:waypoint x="1200" y="280" />
+        <di:waypoint x="1200" y="240" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1102" y="263" width="21" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Cli05_Di" bpmnElement="Flow_Cli05">
+        <di:waypoint x="1250" y="200" />
+        <di:waypoint x="1312" y="200" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_CliTimeout_Di" bpmnElement="Flow_CliTimeout">
+        <di:waypoint x="890" y="258" />
+        <di:waypoint x="890" y="280" />
+        <di:waypoint x="858" y="280" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DataInputAssociation_1_Di" bpmnElement="DataInputAssociation_1">
+        <di:waypoint x="2020" y="1682" />
+        <di:waypoint x="2020" y="470" />
+        <di:waypoint x="2430" y="470" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MessageFlow_Solicitacao_Di" bpmnElement="MessageFlow_Solicitacao">
+        <di:waypoint x="380" y="240" />
+        <di:waypoint x="380" y="430" />
+        <di:waypoint x="260" y="430" />
+        <di:waypoint x="260" y="502" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MessageFlow_EnviarPrototipo_Di" bpmnElement="MessageFlow_EnviarPrototipo">
+        <di:waypoint x="632" y="720" />
+        <di:waypoint x="632" y="240" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MessageFlow_RespostaPrototipo_Di" bpmnElement="MessageFlow_RespostaPrototipo">
+        <di:waypoint x="1200" y="240" />
+        <di:waypoint x="1200" y="590" />
+        <di:waypoint x="522" y="590" />
+        <di:waypoint x="522" y="830" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DataOutputAssociation_1_Di" bpmnElement="DataOutputAssociation_1">
+        <di:waypoint x="1810" y="1711" />
+        <di:waypoint x="1995" y="1711" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
