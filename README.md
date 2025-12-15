@@ -2,7 +2,7 @@
 
 Este repositório contém todos os arquivos utilizados na elaboração do Trabalho de Conclusão de Curso:
 
-“Feedback automatizado em modelagem BPMN: comparação entre ferramentas de correção baseadas em IA”
+“Feedback automatizado em modelagem BPMN: comparação entre ferramentas para correção de modelagem BPMN”
 
 Aqui estão reunidos documentos, planilhas e materiais utilizados na análise das ferramentas avaliadas no estudo, organizados de forma clara para facilitar consulta e reprodutibilidade.
 
